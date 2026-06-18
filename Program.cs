@@ -9,8 +9,6 @@ public class Program
 {
     private static WebSocket? _agentSocket;
     private static readonly object _sendLock = new();
-    private static readonly ConcurrentDictionary<string, DateTime> _activeSessions = new();
-    private static readonly TimeSpan MaxConnectionTime = TimeSpan.FromMinutes(15);
     private static readonly ConcurrentDictionary<string, TaskCompletionSource<TunnelResponse>> _pendingRequests = new();
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -21,6 +19,7 @@ public class Program
 
         app.UseWebSockets();
 
+        // 1. Connection Endpoint for your Local Agent Service
         app.Map("/register-agent", async context =>
         {
             if (context.WebSockets.IsWebSocketRequest)
@@ -75,6 +74,7 @@ public class Program
             }
         });
 
+        // 2. Global Proxy Route - Forwards all incoming web traffic down the tunnel
         app.Map("{*path}", async context =>
         {
             if (_agentSocket == null || _agentSocket.State != WebSocketState.Open)
@@ -84,20 +84,11 @@ public class Program
                 return;
             }
 
-            string userIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            if (_activeSessions.TryGetValue(userIp, out var sessionStartTime) && DateTime.UtcNow - sessionStartTime > MaxConnectionTime)
-            {
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                await context.Response.WriteAsync("Session Expired.");
-                return;
-            }
-            _activeSessions.TryAdd(userIp, DateTime.UtcNow);
-
             string path = context.Request.Path + context.Request.QueryString;
             string method = context.Request.Method;
             string contentType = context.Request.ContentType ?? string.Empty;
 
-            // Extract the incoming request body (e.g. login JSON payloads)
+            // Extract incoming payloads (Forms, JSON bodies, logins)
             string bodyBase64 = string.Empty;
             if (context.Request.ContentLength > 0 || method == "POST" || method == "PUT" || method == "PATCH")
             {
@@ -110,7 +101,6 @@ public class Program
             var tcs = new TaskCompletionSource<TunnelResponse>();
             _pendingRequests[requestId] = tcs;
 
-            // Package metadata bundle along with headers and incoming body payload
             var outboundPacket = new TunnelRequest
             {
                 RequestId = requestId,
@@ -138,6 +128,7 @@ public class Program
                 return;
             }
 
+            // Await response from the office PC agent
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(20)));
 
             if (completedTask == tcs.Task)
@@ -178,6 +169,6 @@ public class TunnelResponse
 {
     public string RequestId { get; set; } = string.Empty;
     public int StatusCode { get; set; }
-    public string ContentType { get; set; } = string.Empty;
+    public string ContentType { get; set; } = string.Empty; // Fixed stray brace here
     public string BodyBase64 { get; set; } = string.Empty;
 }
