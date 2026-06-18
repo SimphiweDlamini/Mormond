@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BackendRelay")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+18766eb60c6543f2ae2ae9401be39fac039f2282")]
 [assembly: System.Reflection.AssemblyProductAttribute("BackendRelay")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BackendRelay")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
