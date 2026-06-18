@@ -88,11 +88,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\simph\\backend-relay\\BackendRelay.csproj",
-      "projectName": "BackendRelay",
-      "projectPath": "C:\\Users\\simph\\backend-relay\\BackendRelay.csproj",
+      "projectUniqueName": "c:\\Users\\simph\\backend-relay\\Mormond.csproj",
+      "projectName": "Mormond",
+      "projectPath": "c:\\Users\\simph\\backend-relay\\Mormond.csproj",
       "packagesPath": "C:\\Users\\simph\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\simph\\backend-relay\\obj\\",
+      "outputPath": "c:\\Users\\simph\\backend-relay\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\simph\\AppData\\Roaming\\NuGet\\NuGet.Config"
