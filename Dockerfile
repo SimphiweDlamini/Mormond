@@ -1,5 +1,5 @@
-# Use the official Microsoft .NET 10 SDK image to build the app
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# Use the official Microsoft .NET 10 SDK preview image to build the app
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
 
 # Copy the project file and restore dependencies
@@ -10,8 +10,8 @@ RUN dotnet restore
 COPY . ./
 RUN dotnet publish -c Release -o /app
 
-# Use the matching lightweight ASP.NET 10 runtime image for final execution
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+# Use the matching lightweight ASP.NET 10 runtime preview image for final execution
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview AS runtime
 WORKDIR /app
 COPY --from=build /app .
 
