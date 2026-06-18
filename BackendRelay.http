@@ -1,0 +1,6 @@
+@BackendRelay_HostAddress = http://localhost:5115
+
+GET {{BackendRelay_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
