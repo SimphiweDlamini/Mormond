@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Mormond")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c7f048e2dd79c1502f8902c2a26c7c986ce48c89")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3e7c64589d0939b5a49b284d5662dbb5576a7180")]
 [assembly: System.Reflection.AssemblyProductAttribute("Mormond")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Mormond")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

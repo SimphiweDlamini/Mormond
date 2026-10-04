@@ -8,7 +8,7 @@ namespace Mormond;
 public class Program
 {
     private static WebSocket? _agentSocket;
-    private static readonly object _sendLock = new();
+    private static readonly SemaphoreSlim _sendLock = new(1, 1);
     private static readonly ConcurrentDictionary<string, TaskCompletionSource<TunnelResponse>> _pendingRequests = new();
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -17,9 +17,12 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         var app = builder.Build();
 
-        app.UseWebSockets();
+        app.UseWebSockets(new WebSocketOptions
+        {
+            KeepAliveInterval = TimeSpan.FromSeconds(15) // Keep-alive ping for Render proxy
+        });
 
-        // 1. Connection Endpoint for your Local Agent Service
+        // 1. Connection Endpoint for Local Agent Service
         app.Map("/register-agent", async context =>
         {
             if (context.WebSockets.IsWebSocketRequest)
@@ -49,11 +52,18 @@ public class Program
                         else if (result.MessageType == WebSocketMessageType.Text)
                         {
                             string rawJson = Encoding.UTF8.GetString(ms.ToArray());
-                            var responsePacket = JsonSerializer.Deserialize<TunnelResponse>(rawJson, JsonOptions);
-
-                            if (responsePacket != null && _pendingRequests.TryRemove(responsePacket.RequestId, out var tcs))
+                            if (!string.IsNullOrWhiteSpace(rawJson))
                             {
-                                tcs.SetResult(responsePacket);
+                                var responsePacket = JsonSerializer.Deserialize<TunnelResponse>(rawJson, JsonOptions);
+
+                                // Safe Null Guard preventing NullReferenceException on line 34
+                                if (responsePacket != null && !string.IsNullOrEmpty(responsePacket.RequestId))
+                                {
+                                    if (_pendingRequests.TryRemove(responsePacket.RequestId, out var tcs))
+                                    {
+                                        tcs.SetResult(responsePacket);
+                                    }
+                                }
                             }
                         }
                     }
@@ -74,7 +84,7 @@ public class Program
             }
         });
 
-        // 2. Global Proxy Route - Forwards all incoming web traffic down the tunnel
+        // 2. Global Proxy Route
         app.Map("{*path}", async context =>
         {
             if (_agentSocket == null || _agentSocket.State != WebSocketState.Open)
@@ -88,7 +98,6 @@ public class Program
             string method = context.Request.Method;
             string contentType = context.Request.ContentType ?? string.Empty;
 
-            // Extract incoming payloads (Forms, JSON bodies, logins)
             string bodyBase64 = string.Empty;
             if (context.Request.ContentLength > 0 || method == "POST" || method == "PUT" || method == "PATCH")
             {
@@ -114,21 +123,31 @@ public class Program
 
             try
             {
-                lock (_sendLock)
+                await _sendLock.WaitAsync();
+                try
                 {
-                    _agentSocket.SendAsync(new ArraySegment<byte>(packetBytes), WebSocketMessageType.Text, true, CancellationToken.None)
-                                .GetAwaiter()
-                                .GetResult();
+                    if (_agentSocket != null && _agentSocket.State == WebSocketState.Open)
+                    {
+                        await _agentSocket.SendAsync(new ArraySegment<byte>(packetBytes), WebSocketMessageType.Text, true, CancellationToken.None);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Socket closed before sending.");
+                    }
+                }
+                finally
+                {
+                    _sendLock.Release();
                 }
             }
             catch (Exception)
             {
+                _pendingRequests.TryRemove(requestId, out _);
                 context.Response.StatusCode = StatusCodes.Status502BadGateway;
                 await context.Response.WriteAsync("Tunnel Transmission Failure.");
                 return;
             }
 
-            // Await response from the office PC agent
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(20)));
 
             if (completedTask == tcs.Task)
@@ -169,6 +188,6 @@ public class TunnelResponse
 {
     public string RequestId { get; set; } = string.Empty;
     public int StatusCode { get; set; }
-    public string ContentType { get; set; } = string.Empty; // Fixed stray brace here
+    public string ContentType { get; set; } = string.Empty;
     public string BodyBase64 { get; set; } = string.Empty;
 }

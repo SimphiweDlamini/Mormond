@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\simph\\backend-relay\\Mormond.csproj": {}
+    "C:\\Users\\simph\\Mormond\\Mormond.csproj": {}
   },
   "projects": {
-    "c:\\Users\\simph\\backend-relay\\Mormond.csproj": {
+    "C:\\Users\\simph\\Mormond\\Mormond.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\simph\\backend-relay\\Mormond.csproj",
+        "projectUniqueName": "C:\\Users\\simph\\Mormond\\Mormond.csproj",
         "projectName": "Mormond",
-        "projectPath": "c:\\Users\\simph\\backend-relay\\Mormond.csproj",
+        "projectPath": "C:\\Users\\simph\\Mormond\\Mormond.csproj",
         "packagesPath": "C:\\Users\\simph\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\simph\\backend-relay\\obj\\",
+        "outputPath": "C:\\Users\\simph\\Mormond\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\simph\\AppData\\Roaming\\NuGet\\NuGet.Config"
